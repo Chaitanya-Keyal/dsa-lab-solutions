@@ -16,7 +16,7 @@ cd "$SCRIPT_DIR"
 new_solution() {
     LAB=$(printf "%02d" $1)
     Q=$(printf "%02d" $2)
-    NUM_TESTS=${3:-0}
+    NUM_TESTS=${3:-2}
     
     DIR="lab_${LAB}"
     FILE="${DIR}/question_${Q}.c"
