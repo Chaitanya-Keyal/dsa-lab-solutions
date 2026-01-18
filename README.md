@@ -7,17 +7,20 @@ Lab solutions for Data Structures and Algorithms (CS F211), 2025-26 Semester 2.
 ### Create a new solution
 
 ```bash
-make new l=1 q=2 t=5
+make new               # Create next question in latest lab
+make new l=1 q=2 t=5   # Create lab_01/question_02.c + 5 test pairs
 ```
 
-Creates `lab_01/question_02.c` with boilerplate and 5 empty test file pairs.
+Creates a C file with boilerplate and empty test file pairs.
 
 ### Run tests
 
 ```bash
-make test l=1 q=2   # Run specific test
-make test l=1       # Run all tests for lab 1
-make test           # Run all tests
+make test              # Run tests for latest question
+make test l=1 q=2      # Run tests for lab_01/question_02.c
+make test l=1          # Run all tests for lab_01
+make test q=2          # Run question 2 from latest lab
+make testall           # Run all tests
 ```
 
 Compiles and runs against all test cases, showing pass/fail results.

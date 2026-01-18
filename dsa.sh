@@ -1,34 +1,50 @@
 #!/bin/bash
 
-# DSA Lab Helper
-# Usage:
-#   ./dsa.sh new <lab> <question> <num_tests>   - Create solution + test files
-#   ./dsa.sh test <lab> <question>              - Run tests
-
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-cd "$SCRIPT_DIR"
+cd "$(dirname "$0")"
+
+fmt_num() { printf "%02d" "$1"; }
+strip_num() { echo "$1" | sed 's/^0*//'; }
+
+get_latest_lab() {
+    local latest=$(ls -d lab_* 2>/dev/null | sort -V | tail -1 | sed 's/lab_//')
+    [ -z "$latest" ] && echo "01" || echo "$latest"
+}
+
+get_latest_question() {
+    local lab_dir="lab_$(fmt_num "$1")"
+    local latest=$(ls "$lab_dir"/question_*.c 2>/dev/null | sort -V | tail -1 | sed 's/.*question_\([0-9]*\)\.c/\1/')
+    [ -z "$latest" ] && echo "00" || echo "$latest"
+}
+
+print_summary() {
+    local passed=$1 failed=$2
+    echo -e "${YELLOW}================================${NC}"
+    echo -e "${YELLOW}FINAL SUMMARY${NC}"
+    echo -e "${GREEN}${passed} passed${NC}, ${RED}${failed} failed${NC}"
+}
 
 new_solution() {
-    LAB=$(printf "%02d" $1)
-    Q=$(printf "%02d" $2)
-    NUM_TESTS=${3:-2}
+    local lab="$1" q="$2" num_tests=${3:-2}
     
-    DIR="lab_${LAB}"
-    FILE="${DIR}/question_${Q}.c"
-    TEST_DIR="${DIR}/tests/question_${Q}"
+    [ -z "$lab" ] && lab=$(strip_num "$(get_latest_lab)")
+    [ -z "$q" ] && q=$(($(strip_num "$(get_latest_question "$lab")") + 1))
     
-    # Check if file already exists
-    if [ -f "$FILE" ]; then
-        echo -e "${YELLOW}Warning: ${FILE} already exists, skipping${NC}"
+    lab=$(fmt_num "$lab")
+    q=$(fmt_num "$q")
+    local dir="lab_${lab}"
+    local file="${dir}/question_${q}.c"
+    local test_dir="${dir}/tests/question_${q}"
+    
+    if [ -f "$file" ]; then
+        echo -e "${YELLOW}Warning: ${file} already exists, skipping${NC}"
     else
-        mkdir -p "$DIR"
-        # Create C file
-        cat > "$FILE" << 'EOF'
+        mkdir -p "$dir"
+        cat > "$file" << 'EOF'
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -42,158 +58,144 @@ int main() {
 
 */
 EOF
-        echo -e "${GREEN}Created: ${FILE}${NC}"
+        echo -e "${GREEN}Created: ${file}${NC}"
     fi
     
-    # Create test files (only if they don't exist)
-    if [ $NUM_TESTS -gt 0 ]; then
-        mkdir -p "$TEST_DIR"
-        CREATED=0
-        for i in $(seq 1 $NUM_TESTS); do
-            NUM=$(printf "%02d" $i)
-            if [ ! -f "${TEST_DIR}/input_${NUM}.txt" ]; then
-                touch "${TEST_DIR}/input_${NUM}.txt"
-                touch "${TEST_DIR}/output_${NUM}.txt"
-                CREATED=$((CREATED + 1))
-            fi
-        done
-        
-        if [ $CREATED -gt 0 ]; then
-            echo -e "${GREEN}Created: ${CREATED} test cases in ${TEST_DIR}${NC}"
-        else
-            echo -e "${YELLOW}Warning: Test files already exist in ${TEST_DIR}${NC}"
+    [ "$num_tests" -le 0 ] && return
+    
+    mkdir -p "$test_dir"
+    local created=0
+    for i in $(seq 1 "$num_tests"); do
+        local num=$(fmt_num "$i")
+        if [ ! -f "${test_dir}/input_${num}.txt" ]; then
+            touch "${test_dir}/input_${num}.txt" "${test_dir}/output_${num}.txt"
+            ((created++))
         fi
-    fi
-}
-
-run_tests() {
-    LAB="$1"
-    Q="$2"
+    done
     
-    # No lab and no question -> run all tests
-    if [ -z "$LAB" ] && [ -z "$Q" ]; then
-        echo -e "${YELLOW}Running all tests...${NC}"
-        echo ""
-        for LAB_DIR in lab_*/; do
-            [ ! -d "$LAB_DIR" ] && continue
-            LAB_NUM=$(basename "$LAB_DIR" | sed 's/lab_//' | sed 's/^0*//')
-            for C_FILE in "$LAB_DIR"question_*.c; do
-                [ ! -f "$C_FILE" ] && continue
-                Q_NUM=$(basename "$C_FILE" .c | sed 's/question_//' | sed 's/^0*//')
-                echo -e "${YELLOW}=== Lab $LAB_NUM Question $Q_NUM ===${NC}"
-                run_single_test "$LAB_NUM" "$Q_NUM"
-                echo ""
-            done
-        done
-        return
+    if [ "$created" -gt 0 ]; then
+        echo -e "${GREEN}Created: ${created} test cases in ${test_dir}${NC}"
+    else
+        echo -e "${YELLOW}Warning: Test files already exist in ${test_dir}${NC}"
     fi
-    
-    # Question but no lab -> error
-    if [ -z "$LAB" ] && [ -n "$Q" ]; then
-        echo -e "${RED}Error: Must specify lab when specifying question${NC}"
-        exit 1
-    fi
-    
-    # Lab but no question -> run all questions in that lab
-    if [ -n "$LAB" ] && [ -z "$Q" ]; then
-        LAB=$(printf "%02d" $LAB)
-        echo -e "${YELLOW}Running all tests for lab_${LAB}...${NC}"
-        echo ""
-        for C_FILE in "lab_${LAB}"/question_*.c; do
-            [ ! -f "$C_FILE" ] && continue
-            Q_NUM=$(basename "$C_FILE" .c | sed 's/question_//' | sed 's/^0*//')
-            echo -e "${YELLOW}=== Question $Q_NUM ===${NC}"
-            run_single_test "$LAB" "$Q_NUM"
-            echo ""
-        done
-        return
-    fi
-    
-    # Both lab and question -> run single test
-    run_single_test "$LAB" "$Q"
 }
 
 run_single_test() {
-    LAB=$(printf "%02d" $1)
-    Q=$(printf "%02d" $2)
+    local lab=$(fmt_num "$1") q=$(fmt_num "$2")
+    local c_file="lab_${lab}/question_${q}.c"
+    local test_dir="lab_${lab}/tests/question_${q}"
+    local exe="/tmp/dsa_test_$$_${lab}_${q}"
     
-    C_FILE="lab_${LAB}/question_${Q}.c"
-    TEST_DIR="lab_${LAB}/tests/question_${Q}"
-    EXECUTABLE="/tmp/dsa_test_$$_${LAB}_${Q}"
+    echo -e "${YELLOW}=== Lab ${lab} Question ${q} ===${NC}"
+    PASSED=0 FAILED=0
     
-    if [ ! -f "$C_FILE" ]; then
-        echo -e "${RED}File not found: ${C_FILE}${NC}"
+    if [ ! -f "$c_file" ]; then
+        echo -e "${RED}File not found: ${c_file}${NC}"
         return 1
     fi
     
-    gcc -o "$EXECUTABLE" "$C_FILE" -lm 2>&1
-    if [ $? -ne 0 ]; then
+    if ! gcc -o "$exe" "$c_file" -lm 2>&1; then
         echo -e "${RED}Compilation failed!${NC}"
         return 1
     fi
     
-    if [ ! -d "$TEST_DIR" ]; then
-        echo -e "${YELLOW}No tests found at: ${TEST_DIR}${NC}"
-        rm -f "$EXECUTABLE"
+    if [ ! -d "$test_dir" ]; then
+        echo -e "${YELLOW}No tests found at: ${test_dir}${NC}"
+        rm -f "$exe"
         return 1
     fi
     
-    PASSED=0; FAILED=0; TOTAL=0
-    
-    for INPUT_FILE in "$TEST_DIR"/input_*.txt; do
-        [ ! -f "$INPUT_FILE" ] && break
+    for input_file in "$test_dir"/input_*.txt; do
+        [ ! -f "$input_file" ] && break
         
-        TEST_NUM=$(basename "$INPUT_FILE" | sed 's/input_\([0-9]*\)\.txt/\1/')
-        OUTPUT_FILE="${TEST_DIR}/output_${TEST_NUM}.txt"
-        [ ! -f "$OUTPUT_FILE" ] && continue
+        local test_num=$(basename "$input_file" | sed 's/input_\([0-9]*\)\.txt/\1/')
+        local output_file="${test_dir}/output_${test_num}.txt"
+        [ ! -f "$output_file" ] && continue
+        local actual=$("$exe" < "$input_file" 2>&1 | sed 's/[[:space:]]*$//')
+        local expected=$(sed 's/[[:space:]]*$//' "$output_file")
         
-        TOTAL=$((TOTAL + 1))
-        ACTUAL=$("$EXECUTABLE" < "$INPUT_FILE" 2>&1 | sed 's/[[:space:]]*$//')
-        EXPECTED=$(cat "$OUTPUT_FILE" | sed 's/[[:space:]]*$//')
-        
-        if [ "$ACTUAL" = "$EXPECTED" ]; then
-            echo -e "${GREEN}✓ Test ${TEST_NUM}${NC}"
-            PASSED=$((PASSED + 1))
+        if [ "$actual" = "$expected" ]; then
+            echo -e "${GREEN}✓ Test ${test_num}${NC}"
+            ((PASSED++))
         else
-            echo -e "${RED}✗ Test ${TEST_NUM}${NC}"
+            echo -e "${RED}✗ Test ${test_num}${NC}"
             echo -e "${YELLOW}  Input:${NC}"
-            cat "$INPUT_FILE" | sed 's/^/    /'
+            sed 's/^/    /' "$input_file"
             echo -e "${YELLOW}  Expected:${NC}"
-            echo "$EXPECTED" | sed 's/^/    /'
+            echo "$expected" | sed 's/^/    /'
             echo -e "${YELLOW}  Got:${NC}"
-            echo "$ACTUAL" | sed 's/^/    /'
+            echo "$actual" | sed 's/^/    /'
             echo ""
-            FAILED=$((FAILED + 1))
+            ((FAILED++))
         fi
     done
     
-    rm -f "$EXECUTABLE"
-    echo -e "Results: ${GREEN}${PASSED} passed${NC}, ${RED}${FAILED} failed${NC}, ${TOTAL} total"
+    rm -f "$exe"
+    echo -e "${GREEN}${PASSED} passed${NC}, ${RED}${FAILED} failed${NC}"
+}
+
+run_multi_tests() {
+    local lab_pattern="$1" header="$2"
+    local total_passed=0 total_failed=0
+    
+    echo -e "${YELLOW}${header}${NC}"
+    echo ""
+    
+    for c_file in $lab_pattern; do
+        [ ! -f "$c_file" ] && continue
+        local lab_num=$(strip_num "$(basename "$(dirname "$c_file")" | sed 's/lab_//')")
+        local q_num=$(strip_num "$(basename "$c_file" .c | sed 's/question_//')")
+        
+        run_single_test "$lab_num" "$q_num"
+        ((total_passed += PASSED))
+        ((total_failed += FAILED))
+        echo ""
+    done
+    
+    print_summary "$total_passed" "$total_failed"
+}
+
+run_tests() {
+    local lab="$1" q="$2"
+    
+    if [ "$lab" = "all" ]; then
+        run_multi_tests "lab_*/question_*.c" "Running all tests..."
+    elif [ -z "$q" ] && [ -n "$lab" ]; then
+        # Only lab given: run all tests for that lab
+        local lab_fmt=$(fmt_num "$lab")
+        run_multi_tests "lab_${lab_fmt}/question_*.c" "Running all tests for Lab ${lab_fmt}..."
+    else
+        # Default lab/q to latest if not given
+        [ -z "$lab" ] && lab=$(strip_num "$(get_latest_lab)")
+        [ -z "$q" ] && q=$(strip_num "$(get_latest_question "$lab")")
+        [ "$q" = "0" ] && { echo -e "${RED}No questions found${NC}"; exit 1; }
+        run_single_test "$lab" "$q"
+    fi
 }
 
 case "$1" in
     new)
-        if [ -z "$2" ] || [ -z "$3" ]; then
-            echo "Usage: ./dsa.sh new <lab> <question> [num_tests]"
-            echo "Example: ./dsa.sh new 1 2 5"
-            exit 1
-        fi
         new_solution "$2" "$3" "$4"
         ;;
     test)
         run_tests "$2" "$3"
         ;;
     *)
-        echo "DSA Lab Helper"
-        echo ""
-        echo "Commands:"
-        echo "  ./dsa.sh new <lab> <question> [num_tests]  - Create solution + test files"
-        echo "  ./dsa.sh test [lab] [question]             - Run tests"
-        echo ""
-        echo "Examples:"
-        echo "  ./dsa.sh new 1 2 5    # Creates lab_01/question_02.c + 5 test pairs"
-        echo "  ./dsa.sh test 1 2     # Runs tests for lab_01/question_02.c"
-        echo "  ./dsa.sh test 1       # Runs all tests for lab_01"
-        echo "  ./dsa.sh test         # Runs all tests"
+        cat << 'EOF'
+DSA Lab Helper
+
+Commands:
+  ./dsa.sh new [lab] [question] [num_tests]  - Create solution + test files
+  ./dsa.sh test [lab] [question]             - Run tests
+  ./dsa.sh test all                          - Run all tests
+
+Examples:
+  ./dsa.sh new           # Creates next question in latest lab
+  ./dsa.sh new 1 2 5     # Creates lab_01/question_02.c + 5 test pairs
+  ./dsa.sh test          # Runs tests for latest question
+  ./dsa.sh test 1 2      # Runs tests for lab_01/question_02.c
+  ./dsa.sh test 1        # Runs all tests for lab_01
+  ./dsa.sh test all      # Runs all tests
+EOF
         ;;
 esac
