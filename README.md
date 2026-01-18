@@ -15,7 +15,9 @@ Creates `lab_01/question_02.c` with boilerplate and 5 empty test file pairs.
 ### Run tests
 
 ```bash
-make test l=1 q=2
+make test l=1 q=2   # Run specific test
+make test l=1       # Run all tests for lab 1
+make test           # Run all tests
 ```
 
 Compiles and runs against all test cases, showing pass/fail results.

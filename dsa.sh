@@ -62,28 +62,75 @@ EOF
 }
 
 run_tests() {
+    LAB="$1"
+    Q="$2"
+    
+    # No lab and no question -> run all tests
+    if [ -z "$LAB" ] && [ -z "$Q" ]; then
+        echo -e "${YELLOW}Running all tests...${NC}"
+        echo ""
+        for LAB_DIR in lab_*/; do
+            [ ! -d "$LAB_DIR" ] && continue
+            LAB_NUM=$(basename "$LAB_DIR" | sed 's/lab_//' | sed 's/^0*//')
+            for C_FILE in "$LAB_DIR"question_*.c; do
+                [ ! -f "$C_FILE" ] && continue
+                Q_NUM=$(basename "$C_FILE" .c | sed 's/question_//' | sed 's/^0*//')
+                echo -e "${YELLOW}=== Lab $LAB_NUM Question $Q_NUM ===${NC}"
+                run_single_test "$LAB_NUM" "$Q_NUM"
+                echo ""
+            done
+        done
+        return
+    fi
+    
+    # Question but no lab -> error
+    if [ -z "$LAB" ] && [ -n "$Q" ]; then
+        echo -e "${RED}Error: Must specify lab when specifying question${NC}"
+        exit 1
+    fi
+    
+    # Lab but no question -> run all questions in that lab
+    if [ -n "$LAB" ] && [ -z "$Q" ]; then
+        LAB=$(printf "%02d" $LAB)
+        echo -e "${YELLOW}Running all tests for lab_${LAB}...${NC}"
+        echo ""
+        for C_FILE in "lab_${LAB}"/question_*.c; do
+            [ ! -f "$C_FILE" ] && continue
+            Q_NUM=$(basename "$C_FILE" .c | sed 's/question_//' | sed 's/^0*//')
+            echo -e "${YELLOW}=== Question $Q_NUM ===${NC}"
+            run_single_test "$LAB" "$Q_NUM"
+            echo ""
+        done
+        return
+    fi
+    
+    # Both lab and question -> run single test
+    run_single_test "$LAB" "$Q"
+}
+
+run_single_test() {
     LAB=$(printf "%02d" $1)
     Q=$(printf "%02d" $2)
     
     C_FILE="lab_${LAB}/question_${Q}.c"
     TEST_DIR="lab_${LAB}/tests/question_${Q}"
-    EXECUTABLE="/tmp/dsa_test_$$"
+    EXECUTABLE="/tmp/dsa_test_$$_${LAB}_${Q}"
     
     if [ ! -f "$C_FILE" ]; then
         echo -e "${RED}File not found: ${C_FILE}${NC}"
-        exit 1
+        return 1
     fi
     
     gcc -o "$EXECUTABLE" "$C_FILE" -lm 2>&1
     if [ $? -ne 0 ]; then
         echo -e "${RED}Compilation failed!${NC}"
-        exit 1
+        return 1
     fi
     
     if [ ! -d "$TEST_DIR" ]; then
-        echo -e "${RED}No tests found at: ${TEST_DIR}${NC}"
+        echo -e "${YELLOW}No tests found at: ${TEST_DIR}${NC}"
         rm -f "$EXECUTABLE"
-        exit 1
+        return 1
     fi
     
     PASSED=0; FAILED=0; TOTAL=0
@@ -116,7 +163,6 @@ run_tests() {
     done
     
     rm -f "$EXECUTABLE"
-    echo ""
     echo -e "Results: ${GREEN}${PASSED} passed${NC}, ${RED}${FAILED} failed${NC}, ${TOTAL} total"
 }
 
@@ -130,22 +176,19 @@ case "$1" in
         new_solution "$2" "$3" "$4"
         ;;
     test)
-        if [ -z "$2" ] || [ -z "$3" ]; then
-            echo "Usage: ./dsa.sh test <lab> <question>"
-            echo "Example: ./dsa.sh test 1 2"
-            exit 1
-        fi
         run_tests "$2" "$3"
         ;;
     *)
         echo "DSA Lab Helper"
         echo ""
         echo "Commands:"
-        echo "  ./dsa.sh new <lab> <question> <num_tests>  - Create solution + test files"
-        echo "  ./dsa.sh test <lab> <question>             - Run tests"
+        echo "  ./dsa.sh new <lab> <question> [num_tests]  - Create solution + test files"
+        echo "  ./dsa.sh test [lab] [question]             - Run tests"
         echo ""
         echo "Examples:"
         echo "  ./dsa.sh new 1 2 5    # Creates lab_01/question_02.c + 5 test pairs"
         echo "  ./dsa.sh test 1 2     # Runs tests for lab_01/question_02.c"
+        echo "  ./dsa.sh test 1       # Runs all tests for lab_01"
+        echo "  ./dsa.sh test         # Runs all tests"
         ;;
 esac
