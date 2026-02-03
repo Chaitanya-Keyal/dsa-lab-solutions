@@ -30,16 +30,16 @@ print_summary() {
 
 new_solution() {
     local lab="$1" q="$2" num_tests=${3:-2}
-    
+
     [ -z "$lab" ] && lab=$(strip_num "$(get_latest_lab)")
     [ -z "$q" ] && q=$(($(strip_num "$(get_latest_question "$lab")") + 1))
-    
+
     lab=$(fmt_num "$lab")
     q=$(fmt_num "$q")
     local dir="lab_${lab}"
     local file="${dir}/question_${q}.c"
     local test_dir="${dir}/tests/question_${q}"
-    
+
     if [ -f "$file" ]; then
         echo -e "${YELLOW}Warning: ${file} already exists, skipping${NC}"
     else
@@ -49,7 +49,7 @@ new_solution() {
 #include <stdlib.h>
 
 int main() {
-    
+
     return 0;
 }
 
@@ -60,9 +60,9 @@ int main() {
 EOF
         echo -e "${GREEN}Created: ${file}${NC}"
     fi
-    
+
     [ "$num_tests" -le 0 ] && return
-    
+
     mkdir -p "$test_dir"
     local created=0
     for i in $(seq 1 "$num_tests"); do
@@ -72,7 +72,7 @@ EOF
             ((created++))
         fi
     done
-    
+
     if [ "$created" -gt 0 ]; then
         echo -e "${GREEN}Created: ${created} test cases in ${test_dir}${NC}"
     else
@@ -85,35 +85,35 @@ run_single_test() {
     local c_file="lab_${lab}/question_${q}.c"
     local test_dir="lab_${lab}/tests/question_${q}"
     local exe="/tmp/dsa_test_$$_${lab}_${q}"
-    
+
     echo -e "${YELLOW}=== Lab ${lab} Question ${q} ===${NC}"
     PASSED=0 FAILED=0
-    
+
     if [ ! -f "$c_file" ]; then
         echo -e "${RED}File not found: ${c_file}${NC}"
         return 1
     fi
-    
+
     if ! gcc -o "$exe" "$c_file" -lm 2>&1; then
         echo -e "${RED}Compilation failed!${NC}"
         return 1
     fi
-    
+
     if [ ! -d "$test_dir" ]; then
         echo -e "${YELLOW}No tests found at: ${test_dir}${NC}"
         rm -f "$exe"
         return 1
     fi
-    
+
     for input_file in "$test_dir"/input_*.txt; do
         [ ! -f "$input_file" ] && break
-        
+
         local test_num=$(basename "$input_file" | sed 's/input_\([0-9]*\)\.txt/\1/')
         local output_file="${test_dir}/output_${test_num}.txt"
         [ ! -f "$output_file" ] && continue
         local actual=$("$exe" < "$input_file" 2>&1 | sed 's/[[:space:]]*$//')
         local expected=$(sed 's/[[:space:]]*$//' "$output_file")
-        
+
         if [ "$actual" = "$expected" ]; then
             echo -e "${GREEN}✓ Test ${test_num}${NC}"
             ((PASSED++))
@@ -129,7 +129,7 @@ run_single_test() {
             ((FAILED++))
         fi
     done
-    
+
     rm -f "$exe"
     echo -e "${GREEN}${PASSED} passed${NC}, ${RED}${FAILED} failed${NC}"
 }
@@ -137,27 +137,27 @@ run_single_test() {
 run_multi_tests() {
     local lab_pattern="$1" header="$2"
     local total_passed=0 total_failed=0
-    
+
     echo -e "${YELLOW}${header}${NC}"
     echo ""
-    
+
     for c_file in $lab_pattern; do
         [ ! -f "$c_file" ] && continue
         local lab_num=$(strip_num "$(basename "$(dirname "$c_file")" | sed 's/lab_//')")
         local q_num=$(strip_num "$(basename "$c_file" .c | sed 's/question_//')")
-        
+
         run_single_test "$lab_num" "$q_num"
         ((total_passed += PASSED))
         ((total_failed += FAILED))
         echo ""
     done
-    
+
     print_summary "$total_passed" "$total_failed"
 }
 
 run_tests() {
     local lab="$1" q="$2"
-    
+
     if [ "$lab" = "all" ]; then
         run_multi_tests "lab_*/question_*.c" "Running all tests..."
     elif [ -z "$q" ] && [ -n "$lab" ]; then
