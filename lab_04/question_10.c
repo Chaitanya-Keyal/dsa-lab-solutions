@@ -5,20 +5,20 @@ int main() {
     int n, g;
     scanf("%d %d", &n, &g);
     int arr[n];
-    int max = 0;
-    int total_income = 0;
+    int max = 0, total = 0;
     for (int i = 0; i < n; i++) {
         scanf("%d", &arr[i]);
-        total_income += arr[i];
         if (arr[i] > max) {
             max = arr[i];
         }
+        total += arr[i];
     }
 
-    if (total_income < g) {
+    if (total < g) {
         printf("-1\n");
         return 0;
     }
+
     int l = 0, r = max;
     while (l < r) {
         int mid = (l + r) / 2;

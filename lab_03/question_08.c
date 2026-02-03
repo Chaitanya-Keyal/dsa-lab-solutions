@@ -5,12 +5,9 @@ int main() {
     int n, d;
     scanf("%d %d", &n, &d);
     int arr[n];
-    for (int i = 0; i < n; i++) {
-        scanf("%d", &arr[i]);
-    }
-
     int max = 0, total = 0;
     for (int i = 0; i < n; i++) {
+        scanf("%d", &arr[i]);
         if (arr[i] > max) {
             max = arr[i];
         }
