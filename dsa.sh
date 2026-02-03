@@ -132,6 +132,7 @@ run_single_test() {
 
     rm -f "$exe"
     echo -e "${GREEN}${PASSED} passed${NC}, ${RED}${FAILED} failed${NC}"
+    [ "$FAILED" -eq 0 ]
 }
 
 run_multi_tests() {
@@ -153,6 +154,7 @@ run_multi_tests() {
     done
 
     print_summary "$total_passed" "$total_failed"
+    [ "$total_failed" -eq 0 ]
 }
 
 run_tests() {
