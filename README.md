@@ -25,6 +25,15 @@ make testall           # Run all tests
 
 Compiles and runs against all test cases, showing pass/fail results.
 
+### Commit changes
+
+```bash
+make commit            # Commit latest question with pre-commit checks
+make commit l=1 q=2    # Commit lab_01/question_02.c with pre-commit checks
+```
+
+Runs pre-commit hooks (formatting, trailing whitespace, etc.), then commits the question file and all its test files with message `feat: lab X question Y`. Attempts to sign commits by default, falls back to unsigned if signing fails.
+
 ## Test Format
 
 Each test case is a pair of files:

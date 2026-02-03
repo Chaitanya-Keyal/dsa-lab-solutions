@@ -175,12 +175,52 @@ run_tests() {
     fi
 }
 
+commit_question() {
+    local lab="$1" q="$2"
+
+    [ -z "$lab" ] && lab=$(strip_num "$(get_latest_lab)")
+    [ -z "$q" ] && q=$(strip_num "$(get_latest_question "$lab")")
+
+    local lab_fmt=$(fmt_num "$lab")
+    local q_fmt=$(fmt_num "$q")
+    local question_file="lab_${lab_fmt}/question_${q_fmt}.c"
+    local test_dir="lab_${lab_fmt}/tests/question_${q_fmt}"
+
+    echo -e "${YELLOW}Committing Lab ${lab} Question ${q}...${NC}"
+
+    if [ ! -f "$question_file" ]; then
+        echo -e "${RED}Error: ${question_file} not found${NC}"
+        return 1
+    fi
+
+    echo -e "${YELLOW}Running pre-commit checks...${NC}"
+    pre-commit run --files "$question_file" "$test_dir"/* 2>/dev/null || true
+
+    git add "$question_file" "$test_dir" 2>/dev/null || true
+
+    if git diff --cached --quiet; then
+        echo -e "${YELLOW}No changes to commit${NC}"
+        return 0
+    fi
+
+    if git commit -S -m "feat: lab $lab question $q" 2>/dev/null; then
+        echo -e "${GREEN}✓ Committed with signature${NC}"
+    else
+        echo -e "${YELLOW}Signing failed, committing without signature...${NC}"
+        git commit -m "feat: lab $lab question $q"
+        echo -e "${GREEN}✓ Committed without signature${NC}"
+    fi
+}
+
 case "$1" in
     new)
         new_solution "$2" "$3" "$4"
         ;;
     test)
         run_tests "$2" "$3"
+        ;;
+    commit)
+        commit_question "$2" "$3"
         ;;
     *)
         cat << 'EOF'
@@ -190,6 +230,7 @@ Commands:
   ./dsa.sh new [lab] [question] [num_tests]  - Create solution + test files
   ./dsa.sh test [lab] [question]             - Run tests
   ./dsa.sh test all                          - Run all tests
+  ./dsa.sh commit [lab] [question]           - Commit with pre-commit checks
 
 Examples:
   ./dsa.sh new           # Creates next question in latest lab
@@ -198,6 +239,8 @@ Examples:
   ./dsa.sh test 1 2      # Runs tests for lab_01/question_02.c
   ./dsa.sh test 1        # Runs all tests for lab_01
   ./dsa.sh test all      # Runs all tests
+  ./dsa.sh commit        # Commits latest question
+  ./dsa.sh commit 1 2    # Commits lab_01/question_02.c
 EOF
         ;;
 esac

@@ -1,4 +1,4 @@
-.PHONY: help new test testall
+.PHONY: help new test testall commit
 
 # Support both upper and lowercase
 L ?= $(l)
@@ -13,6 +13,8 @@ help:
 	@echo "  make test l=1 q=2      - Run tests for lab_01/question_02.c"
 	@echo "  make test l=1          - Run all tests for lab_01"
 	@echo "  make testall           - Run all tests"
+	@echo "  make commit            - Commit latest question with pre-commit checks"
+	@echo "  make commit l=1 q=2    - Commit lab_01/question_02.c with pre-commit checks"
 
 # Create new solution: make new l=1 q=2 t=5
 new:
@@ -25,3 +27,7 @@ test:
 # Run all tests
 testall:
 	@./dsa.sh test all
+
+# Commit changes: make commit l=1 q=2
+commit:
+	@./dsa.sh commit "$(L)" "$(Q)"
