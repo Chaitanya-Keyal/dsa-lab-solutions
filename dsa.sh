@@ -44,20 +44,7 @@ new_solution() {
         echo -e "${YELLOW}Warning: ${file} already exists, skipping${NC}"
     else
         mkdir -p "$dir"
-        cat > "$file" << 'EOF'
-#include <stdio.h>
-#include <stdlib.h>
-
-int main() {
-
-    return 0;
-}
-
-// clang-format off
-/* Question:
-
-*/
-EOF
+        cp template.c "$file"
         echo -e "${GREEN}Created: ${file}${NC}"
     fi
 
