@@ -11,12 +11,12 @@ fmt_num() { printf "%02d" "$1"; }
 strip_num() { echo "$1" | sed 's/^0*//'; }
 
 get_latest_lab() {
-    local latest=$(ls -d lab_* 2>/dev/null | sort -V | tail -1 | sed 's/lab_//')
+    local latest=$(ls -d labs/lab_* 2>/dev/null | sort -V | tail -1 | sed 's/labs\/lab_//')
     [ -z "$latest" ] && echo "01" || echo "$latest"
 }
 
 get_latest_question() {
-    local lab_dir="lab_$(fmt_num "$1")"
+    local lab_dir="labs/lab_$(fmt_num "$1")"
     local latest=$(ls "$lab_dir"/question_*.c 2>/dev/null | sort -V | tail -1 | sed 's/.*question_\([0-9]*\)\.c/\1/')
     [ -z "$latest" ] && echo "00" || echo "$latest"
 }
@@ -36,7 +36,7 @@ new_solution() {
 
     lab=$(fmt_num "$lab")
     q=$(fmt_num "$q")
-    local dir="lab_${lab}"
+    local dir="labs/lab_${lab}"
     local file="${dir}/question_${q}.c"
     local test_dir="${dir}/tests/question_${q}"
 
@@ -69,8 +69,8 @@ new_solution() {
 
 run_single_test() {
     local lab=$(fmt_num "$1") q=$(fmt_num "$2")
-    local c_file="lab_${lab}/question_${q}.c"
-    local test_dir="lab_${lab}/tests/question_${q}"
+    local c_file="labs/lab_${lab}/question_${q}.c"
+    local test_dir="labs/lab_${lab}/tests/question_${q}"
     local exe="/tmp/dsa_test_$$_${lab}_${q}"
 
     echo -e "${YELLOW}=== Lab ${lab} Question ${q} ===${NC}"
@@ -131,7 +131,7 @@ run_multi_tests() {
 
     for c_file in $lab_pattern; do
         [ ! -f "$c_file" ] && continue
-        local lab_num=$(strip_num "$(basename "$(dirname "$c_file")" | sed 's/lab_//')")
+        local lab_num=$(strip_num "$(basename "$(dirname "$c_file")" | sed 's/labs\/lab_//' | sed 's/lab_//')")
         local q_num=$(strip_num "$(basename "$c_file" .c | sed 's/question_//')")
 
         run_single_test "$lab_num" "$q_num"
@@ -148,11 +148,11 @@ run_tests() {
     local lab="$1" q="$2"
 
     if [ "$lab" = "all" ]; then
-        run_multi_tests "lab_*/question_*.c" "Running all tests..."
+        run_multi_tests "labs/lab_*/question_*.c" "Running all tests..."
     elif [ -z "$q" ] && [ -n "$lab" ]; then
         # Only lab given: run all tests for that lab
         local lab_fmt=$(fmt_num "$lab")
-        run_multi_tests "lab_${lab_fmt}/question_*.c" "Running all tests for Lab ${lab_fmt}..."
+        run_multi_tests "labs/lab_${lab_fmt}/question_*.c" "Running all tests for Lab ${lab_fmt}..."
     else
         # Default lab/q to latest if not given
         [ -z "$lab" ] && lab=$(strip_num "$(get_latest_lab)")
@@ -170,8 +170,8 @@ commit_question() {
 
     local lab_fmt=$(fmt_num "$lab")
     local q_fmt=$(fmt_num "$q")
-    local question_file="lab_${lab_fmt}/question_${q_fmt}.c"
-    local test_dir="lab_${lab_fmt}/tests/question_${q_fmt}"
+    local question_file="labs/lab_${lab_fmt}/question_${q_fmt}.c"
+    local test_dir="labs/lab_${lab_fmt}/tests/question_${q_fmt}"
 
     echo -e "${YELLOW}Committing Lab ${lab} Question ${q}...${NC}"
 
@@ -221,13 +221,13 @@ Commands:
 
 Examples:
   ./dsa.sh new           # Creates next question in latest lab
-  ./dsa.sh new 1 2 5     # Creates lab_01/question_02.c + 5 test pairs
+  ./dsa.sh new 1 2 5     # Creates labs/lab_01/question_02.c + 5 test pairs
   ./dsa.sh test          # Runs tests for latest question
-  ./dsa.sh test 1 2      # Runs tests for lab_01/question_02.c
+  ./dsa.sh test 1 2      # Runs tests for labs/lab_01/question_02.c
   ./dsa.sh test 1        # Runs all tests for lab_01
   ./dsa.sh test all      # Runs all tests
   ./dsa.sh commit        # Commits latest question
-  ./dsa.sh commit 1 2    # Commits lab_01/question_02.c
+  ./dsa.sh commit 1 2    # Commits labs/lab_01/question_02.c
 EOF
         ;;
 esac
