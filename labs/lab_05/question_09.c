@@ -24,12 +24,10 @@ int main() {
 
     int found = 0;
     for (int i = 0; i < n - 2; i++) {
-        if (arr[i] > 0) break;  // All remaining sums will be positive
-        if (i > 0 && arr[i] == arr[i - 1]) continue;  // Skip duplicates
-        if (arr[i] + arr[i + 1] + arr[i + 2] > 0)
-            break;  // Smallest sum too large
-        if (arr[i] + arr[n - 2] + arr[n - 1] < 0)
-            continue;  // Largest sum too small
+        if (arr[i] > 0) break;                               // All remaining sums will be positive
+        if (i > 0 && arr[i] == arr[i - 1]) continue;         // Skip duplicates
+        if (arr[i] + arr[i + 1] + arr[i + 2] > 0) break;     // Smallest sum too large
+        if (arr[i] + arr[n - 2] + arr[n - 1] < 0) continue;  // Largest sum too small
         int l = i + 1, r = n - 1;
         while (l < r) {
             int sum = arr[i] + arr[l] + arr[r];

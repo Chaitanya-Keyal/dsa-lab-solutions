@@ -21,24 +21,16 @@ int main() {
         int saved = matrix[top][left];
 
         if (layer % 2 == 0) {  // Odd layer (0-based)
-            for (int i = top; i < bottom; i++)
-                matrix[i][left] = matrix[i + 1][left];
-            for (int j = left; j < right; j++)
-                matrix[bottom][j] = matrix[bottom][j + 1];
-            for (int i = bottom; i > top; i--)
-                matrix[i][right] = matrix[i - 1][right];
-            for (int j = right; j > left + 1; j--)
-                matrix[top][j] = matrix[top][j - 1];
+            for (int i = top; i < bottom; i++) matrix[i][left] = matrix[i + 1][left];
+            for (int j = left; j < right; j++) matrix[bottom][j] = matrix[bottom][j + 1];
+            for (int i = bottom; i > top; i--) matrix[i][right] = matrix[i - 1][right];
+            for (int j = right; j > left + 1; j--) matrix[top][j] = matrix[top][j - 1];
             matrix[top][left + 1] = saved;
         } else {
-            for (int j = left; j < right; j++)
-                matrix[top][j] = matrix[top][j + 1];
-            for (int i = top; i < bottom; i++)
-                matrix[i][right] = matrix[i + 1][right];
-            for (int j = right; j > left; j--)
-                matrix[bottom][j] = matrix[bottom][j - 1];
-            for (int i = bottom; i > top + 1; i--)
-                matrix[i][left] = matrix[i - 1][left];
+            for (int j = left; j < right; j++) matrix[top][j] = matrix[top][j + 1];
+            for (int i = top; i < bottom; i++) matrix[i][right] = matrix[i + 1][right];
+            for (int j = right; j > left; j--) matrix[bottom][j] = matrix[bottom][j - 1];
+            for (int i = bottom; i > top + 1; i--) matrix[i][left] = matrix[i - 1][left];
             matrix[top + 1][left] = saved;
         }
     }

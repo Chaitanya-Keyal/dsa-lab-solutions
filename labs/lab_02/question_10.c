@@ -20,8 +20,7 @@ int main() {
         while (A[right] - A[left] > K) {
             left++;
         }
-        maxCount =
-            (right - left + 1 > maxCount) ? (right - left + 1) : maxCount;
+        maxCount = (right - left + 1 > maxCount) ? (right - left + 1) : maxCount;
     }
 
     printf("%d\n", maxCount);

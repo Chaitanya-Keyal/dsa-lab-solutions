@@ -56,8 +56,7 @@ int main() {
     }
     merge_sort(arr, 0, n - 1);
     for (int i = 1; i < n; i++) {
-        if (arr[i].value == arr[i - 1].value &&
-            abs(arr[i].index - arr[i - 1].index) > k) {
+        if (arr[i].value == arr[i - 1].value && abs(arr[i].index - arr[i - 1].index) > k) {
             printf("%d %d\n", arr[i - 1].index, arr[i].index);
             return 0;
         }
