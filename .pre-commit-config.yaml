@@ -1,4 +1,13 @@
 repos:
+  - repo: local
+    hooks:
+      - id: strip-question-comments
+        name: Strip question comments from C files
+        entry: scripts/strip-question-comments.sh
+        language: script
+        types: [c]
+        exclude: ^template\.c$
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
