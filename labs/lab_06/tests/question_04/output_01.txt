@@ -1,0 +1,5 @@
+Minimum: 15
+Top: 15
+Popped: 15
+Minimum: 30
+Top: 30

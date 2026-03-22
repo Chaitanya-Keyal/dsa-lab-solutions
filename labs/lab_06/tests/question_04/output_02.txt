@@ -1,0 +1,5 @@
+Popped: 50
+Stack Empty
+Minimum: 10
+Top: 20
+Popped: 20
