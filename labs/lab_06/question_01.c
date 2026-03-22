@@ -9,7 +9,7 @@ void push(int x) { stack[++top] = x; }
 
 int pop() { return stack[top--]; }
 
-int getTop() { return stack[top]; }
+int peek() { return stack[top]; }
 
 int size() { return top + 1; }
 
@@ -23,10 +23,10 @@ int main() {
 
     int span[n];
     for (int i = 0; i < n; i++) {
-        while (size() > 0 && prices[getTop()] <= prices[i]) {
+        while (size() > 0 && prices[peek()] <= prices[i]) {
             pop();
         }
-        span[i] = size() == 0 ? i + 1 : i - getTop();
+        span[i] = size() == 0 ? i + 1 : i - peek();
         push(i);
     }
 

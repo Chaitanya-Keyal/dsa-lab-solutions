@@ -9,7 +9,7 @@ void push(int x) { stack[++top] = x; }
 
 int pop() { return stack[top--]; }
 
-int getTop() { return stack[top]; }
+int peek() { return stack[top]; }
 
 int size() { return top + 1; }
 
@@ -23,9 +23,9 @@ int main() {
 
     int maxArea = 0;
     for (int i = 0; i < n; i++) {
-        while (size() > 0 && heights[getTop()] >= heights[i]) {
+        while (size() > 0 && heights[peek()] >= heights[i]) {
             int height = heights[pop()];
-            int width = size() == 0 ? i : i - getTop() - 1;
+            int width = size() == 0 ? i : i - peek() - 1;
             int area = height * width;
             if (area > maxArea) {
                 maxArea = area;
@@ -35,7 +35,7 @@ int main() {
     }
     while (size() > 0) {
         int height = heights[pop()];
-        int width = size() == 0 ? n : n - getTop() - 1;
+        int width = size() == 0 ? n : n - peek() - 1;
         int area = height * width;
         if (area > maxArea) {
             maxArea = area;

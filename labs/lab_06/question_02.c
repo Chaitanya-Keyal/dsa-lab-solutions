@@ -9,7 +9,7 @@ void push(int x) { stack[++top] = x; }
 
 int pop() { return stack[top--]; }
 
-int getTop() { return stack[top]; }
+int peek() { return stack[top]; }
 
 int size() { return top + 1; }
 
@@ -22,10 +22,10 @@ int main() {
     }
     int wait[n];
     for (int i = n - 1; i >= 0; i--) {
-        while (size() > 0 && temps[getTop()] <= temps[i]) {
+        while (size() > 0 && temps[peek()] <= temps[i]) {
             pop();
         }
-        wait[i] = size() == 0 ? 0 : getTop() - i;
+        wait[i] = size() == 0 ? 0 : peek() - i;
         push(i);
     }
     for (int i = 0; i < n; i++) {
