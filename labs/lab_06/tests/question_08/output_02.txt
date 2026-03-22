@@ -1,0 +1,8 @@
+Push
+Push
+Push
+Pop
+Push
+Pop
+Pop
+Pop
