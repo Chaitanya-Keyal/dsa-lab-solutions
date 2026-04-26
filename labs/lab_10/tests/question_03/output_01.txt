@@ -1,0 +1,10 @@
+Index 0: Empty
+Index 1: Empty
+Index 2: [12:9] -> [22:3] -> [7:10]
+Index 3: Empty
+Index 4: Empty
+Index 0: Empty
+Index 1: Empty
+Index 2: [12:9] -> [22:3] -> [7:15]
+Index 3: [8:1]
+Index 4: Empty
