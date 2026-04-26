@@ -1,0 +1,5 @@
+Index 0: Empty
+Index 1: Empty
+Index 2: Empty
+Index 3: [7:2] -> [11:2] -> [3:2]
+3 2
